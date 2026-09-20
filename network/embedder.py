@@ -1,28 +1,70 @@
-import gt_all_minilm_l6_v2
+from sentence_transformers import SentenceTransformer
 import pandas as pd
 import numpy as np
+import torch
 
-model = gt_all_minilm_l6_v2.load_model()
+model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
 texts = pd.read_csv('./dataset/anime_data.csv', encoding='utf-8')
+df = pd.read_csv('./dataset/anime_data.csv', encoding='utf-8')
 
-texts['genres'] = texts['genres'].fillna('').astype(str)
-texts['description'] = texts['description'].fillna('').astype(str)
+texts = texts['genres'].fillna('').astype(str) + texts['description'].fillna('').astype(str)
+documents = []
+# texts['description'] = texts['description'].fillna('').astype(str)
 
 def load_model():
     return model
 
-def compute_embeddings_genres(model, texts):
-    titles = texts['genres'].tolist()
-    embedding_genres = model.encode(titles)
-    return embedding_genres
-    
-def compute_embeddings_descriptions(model, texts):
-    descriptions = texts['description'].tolist()
-    embedding_descriptions = model.encode(descriptions)
-    return embedding_descriptions
 
-def unite_embeddings(alpha=0.3):
-    genres_embeddings = compute_embeddings_genres(model, texts)
-    descriptions_embeddings = compute_embeddings_descriptions(model, texts)
-    combined_embeddings = alpha * genres_embeddings + (1 - alpha) * descriptions_embeddings
-    return combined_embeddings
+
+# def compute_embeddings_genres(model, texts):
+#     titles = texts['genres'].tolist()
+#     embedding_genres = model.encode(titles)
+#     return embedding_genres
+    
+# def compute_embeddings_descriptions(model, texts):
+#     descriptions = texts['description'].tolist()
+#     embedding_descriptions = model.encode(descriptions)
+#     return embedding_descriptions
+
+# def unite_embeddings(alpha=0.3):
+#     genres_embeddings = compute_embeddings_genres(model, texts)
+#     descriptions_embeddings = compute_embeddings_descriptions(model, texts)
+#     combined_embeddings = alpha * genres_embeddings + (1 - alpha) * descriptions_embeddings
+#     return combined_embeddings
+
+# if __name__ == '__main__':
+#     print(texts[:10])
+
+def get_embeddings():
+    for i in texts:
+        documents.append(i)
+        
+    embeddings = model.encode(documents, batch_size=64, show_progress_bar=True)
+    np.save('embeddings.npy', embeddings)
+
+def encode_request(request):
+    request_embedding = model.encode(request)
+    return request_embedding
+
+def semantic_search(request, embeddings):
+    similarities = model.similarity(request, embeddings)
+    return similarities
+
+def get_top_animes(similarities, top_k=10):
+    sims = similarities.squeeze()
+    top_indeces = torch.argsort(sims, descending=True)[:top_k]
+    for anime in top_indeces:
+        anime = anime.item()
+        title_english = df.iloc[anime]['title_english']
+        if pd.isna(title_english):
+            anime_title = df.iloc[anime]['title_romaji']
+        else:
+            anime_title = title_english
+        print(anime_title)
+
+if __name__ == '__main__':
+    request = input('your request: ')
+    request_tensor = encode_request(request)
+    file = np.load('embeddings.npy')
+    similarities = semantic_search(request=request_tensor, embeddings=file)
+    get_top_animes(similarities)
