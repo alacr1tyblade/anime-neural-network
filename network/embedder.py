@@ -69,14 +69,13 @@ def rrf(semantic_ids, bm25_ids, k=60):
     return sorted(scores.items(), key=lambda x: -x[1])
 
 if __name__ == '__main__':
-    # request = input('your request: ')
-    # request_tensor = encode_request(request)
-    # file = np.load('embeddings.npy')
-    # similarities = semantic_search(request=request_tensor, embeddings=file)
-    # semantic_indeces = get_index_animes(similarities)
-    # a = bm25_search([request])
-    # bm25_indeces = get_index_from_bm25(a)
-    # result = rrf(semantic_indeces, bm25_indeces)
-    # ids = [doc_id for doc_id, score in result]
-    # get_top_animes(ids)
-    print(df.iloc[3601][['title_english', 'title_romaji', 'genres', 'description']])
+    request = input('your request: ')
+    request_tensor = encode_request(request)
+    file = np.load('embeddings.npy')
+    similarities = semantic_search(request=request_tensor, embeddings=file)
+    semantic_indeces = get_index_animes(similarities)
+    a = bm25_search([request])
+    bm25_indeces = get_index_from_bm25(a)
+    result = rrf(semantic_indeces, bm25_indeces)
+    ids = [doc_id for doc_id, score in result]
+    get_top_animes(ids)
