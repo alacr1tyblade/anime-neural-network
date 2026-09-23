@@ -3,9 +3,9 @@ import pandas as pd
 from network.embedder import load_model
 model = load_model()
 
-df = pd.read_csv('dataset/anime_data.csv', encoding='utf-8')
+df = pd.read_csv('./databases/anime_data.csv', encoding='utf-8')
 
-embeddings = np.load('dataset/embeddings.npy')
+embeddings = np.load('./databases/embeddings.npy')
 
 def search(query, top_k=5):
     query_vec = model.encode(query)
