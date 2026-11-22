@@ -1,3 +1,7 @@
+from transformers.utils.logging import disable_progress_bar
+
+disable_progress_bar()
+
 from sentence_transformers import SentenceTransformer
 
 model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
